@@ -26,8 +26,6 @@ jobs:
           make remapper
           cd ..
           mkdir artifacts
-          mv build/*.uf2 artifacts
-          rm artifacts/flash_b_side.uf2
           mv build-feather/remapper.uf2 artifacts/remapper_feather.uf2
         working-directory: ./firmware
       - uses: actions/upload-artifact@v7
