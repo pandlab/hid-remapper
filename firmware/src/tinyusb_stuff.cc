@@ -32,6 +32,9 @@
 #include "platform.h"
 #include "remapper.h"
 
+// Uncomment to expose the second HID interface used for device configuration.
+// #define WITH_HID_CONFIG
+
 // These IDs are bogus. If you want to distribute any hardware using this,
 // you will have to get real ones.
 #define USB_VID 0xCAFE
@@ -57,40 +60,60 @@ tusb_desc_device_t desc_device = {
     .bNumConfigurations = 0x01,
 };
 
+#ifdef WITH_HID_CONFIG
+#define CONFIG_ITF_COUNT 2
+#define CONFIG_HID_DESC_LEN TUD_HID_DESC_LEN
+#else
+#define CONFIG_ITF_COUNT 1
+#define CONFIG_HID_DESC_LEN 0
+#endif
+
 const uint8_t configuration_descriptor0[] = {
-    TUD_CONFIG_DESCRIPTOR(1, 2, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_HID_DESC_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+    TUD_CONFIG_DESCRIPTOR(1, CONFIG_ITF_COUNT, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + CONFIG_HID_DESC_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
     TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_KEYBOARD, our_descriptors[0].descriptor_length, 0x81, CFG_TUD_HID_EP_BUFSIZE, 1),
+#ifdef WITH_HID_CONFIG
     TUD_HID_DESCRIPTOR(1, 0, HID_ITF_PROTOCOL_NONE, config_report_descriptor_length, 0x83, CFG_TUD_HID_EP_BUFSIZE, 1),
+#endif
 };
 
 const uint8_t configuration_descriptor1[] = {
-    TUD_CONFIG_DESCRIPTOR(1, 2, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_HID_DESC_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+    TUD_CONFIG_DESCRIPTOR(1, CONFIG_ITF_COUNT, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + CONFIG_HID_DESC_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
     TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_KEYBOARD, our_descriptors[1].descriptor_length, 0x81, CFG_TUD_HID_EP_BUFSIZE, 1),
+#ifdef WITH_HID_CONFIG
     TUD_HID_DESCRIPTOR(1, 0, HID_ITF_PROTOCOL_NONE, config_report_descriptor_length, 0x83, CFG_TUD_HID_EP_BUFSIZE, 1),
+#endif
 };
 
 const uint8_t configuration_descriptor2[] = {
-    TUD_CONFIG_DESCRIPTOR(1, 2, 0, TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN + TUD_HID_DESC_LEN, 0, 100),
+    TUD_CONFIG_DESCRIPTOR(1, CONFIG_ITF_COUNT, 0, TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN + CONFIG_HID_DESC_LEN, 0, 100),
     TUD_HID_INOUT_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_NONE, our_descriptors[2].descriptor_length, 0x02, 0x81, CFG_TUD_HID_EP_BUFSIZE, 1),
+#ifdef WITH_HID_CONFIG
     TUD_HID_DESCRIPTOR(1, 0, HID_ITF_PROTOCOL_NONE, config_report_descriptor_length, 0x83, CFG_TUD_HID_EP_BUFSIZE, 1),
+#endif
 };
 
 const uint8_t configuration_descriptor3[] = {
-    TUD_CONFIG_DESCRIPTOR(1, 2, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_HID_DESC_LEN, 0, 100),
+    TUD_CONFIG_DESCRIPTOR(1, CONFIG_ITF_COUNT, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + CONFIG_HID_DESC_LEN, 0, 100),
     TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_NONE, our_descriptors[3].descriptor_length, 0x81, CFG_TUD_HID_EP_BUFSIZE, 1),
+#ifdef WITH_HID_CONFIG
     TUD_HID_DESCRIPTOR(1, 0, HID_ITF_PROTOCOL_NONE, config_report_descriptor_length, 0x83, CFG_TUD_HID_EP_BUFSIZE, 1),
+#endif
 };
 
 const uint8_t configuration_descriptor4[] = {
-    TUD_CONFIG_DESCRIPTOR(1, 2, 0, TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN + TUD_HID_DESC_LEN, 0, 100),
+    TUD_CONFIG_DESCRIPTOR(1, CONFIG_ITF_COUNT, 0, TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN + CONFIG_HID_DESC_LEN, 0, 100),
     TUD_HID_INOUT_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_NONE, our_descriptors[4].descriptor_length, 0x02, 0x81, CFG_TUD_HID_EP_BUFSIZE, 1),
+#ifdef WITH_HID_CONFIG
     TUD_HID_DESCRIPTOR(1, 0, HID_ITF_PROTOCOL_NONE, config_report_descriptor_length, 0x83, CFG_TUD_HID_EP_BUFSIZE, 1),
+#endif
 };
 
 const uint8_t configuration_descriptor5[] = {
-    TUD_CONFIG_DESCRIPTOR(1, 2, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_HID_DESC_LEN, 0, 100),
+    TUD_CONFIG_DESCRIPTOR(1, CONFIG_ITF_COUNT, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + CONFIG_HID_DESC_LEN, 0, 100),
     TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_NONE, our_descriptors[5].descriptor_length, 0x81, CFG_TUD_HID_EP_BUFSIZE, 1),
+#ifdef WITH_HID_CONFIG
     TUD_HID_DESCRIPTOR(1, 0, HID_ITF_PROTOCOL_NONE, config_report_descriptor_length, 0x83, CFG_TUD_HID_EP_BUFSIZE, 1),
+#endif
 };
 
 const uint8_t* configuration_descriptors[] = {
@@ -136,9 +159,12 @@ uint8_t const* tud_descriptor_configuration_cb(uint8_t index) {
 uint8_t const* tud_hid_descriptor_report_cb(uint8_t itf) {
     if (itf == 0) {
         return our_descriptor->descriptor;
-    } else if (itf == 1) {
+    }
+#ifdef WITH_HID_CONFIG
+    else if (itf == 1) {
         return config_report_descriptor;
     }
+#endif
 
     return NULL;
 }
